@@ -1,0 +1,97 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Mail\OtpMail;
+use App\Models\Email_otp;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+
+class AuthController extends Controller
+{
+    /**
+     * Register User
+     */
+    public function register(Request $request)
+    {
+        $validatedData = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'password' => ['required', 'confirmed', 'min:8'],
+        ]);
+
+        $user = User::create([
+            'name' => $validatedData['name'],
+            'email' => $validatedData['email'],
+            'password' => Hash::make($validatedData['password']),
+        ]);
+
+        Email_otp::where('user_id', $user->id)->delete();
+
+        $otp = random_int(100000, 999999);
+
+        Email_otp::create([
+            'user_id'    => $user->id,
+            'otp_hash'   => Hash::make($otp),
+            'expires_at' => now()->addMinutes(10),
+        ]);
+        try {
+
+            Mail::to($user->email)->send(new OtpMail($otp));
+        } catch (\Exception $e) {
+
+            dd($e->getMessage());
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Register berhasil. OTP telah dikirim ke email.',
+        ], 201);
+    }
+
+    /**
+     * Login User
+     */
+    public function login(Request $request)
+    {
+        $validatedData = $request->validate([
+            'email' => ['required', 'email'],
+            'password' => ['required'],
+        ]);
+
+        $user = User::where('email', $validatedData['email'])->first();
+
+        if (!$user || !Hash::check($validatedData['password'], $user->password)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Email atau password salah.'
+            ], 401);
+        }
+
+        $user->tokens()->delete();
+
+        $token = $user->createToken('pinat-workspace')->plainTextToken;
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Login berhasil.',
+            'token' => $token,
+            'user' => $user,
+        ]);
+    }
+
+    /**
+     * Logout User
+     */
+    public function logout(Request $request)
+    {
+        $request->user()->currentAccessToken()->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Logout berhasil.'
+        ]);
+    }
+}
