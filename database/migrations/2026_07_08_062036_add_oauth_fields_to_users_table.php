@@ -12,7 +12,7 @@ return new class extends Migration
             // nullable -> OAuth users don't need a password
             $table->string('password')->nullable()->change();
             $table->string('username')->nullable()->unique()->after('name');
-            $table->string('avatar')->nullable()->after('username');
+            $table->string('avatar_key')->nullable()->after('username');
         });
     }
 
@@ -20,7 +20,7 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->string('password')->nullable(false)->change();
-            $table->dropColumn(['username', 'avatar']);
+            $table->dropColumn(['username', 'avatar_key']);
         });
     }
 };

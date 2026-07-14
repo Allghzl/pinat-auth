@@ -6,6 +6,7 @@ namespace App\Models;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -20,6 +21,7 @@ use Tymon\JWTAuth\Contracts\JWTSubject;
  * @property int $id
  * @property string $name
  * @property string|null $username
+ * @property string|null $avatar_key
  * @property string|null $avatar
  * @property string $email
  * @property Carbon|null $email_verified_at
@@ -31,13 +33,15 @@ use Tymon\JWTAuth\Contracts\JWTSubject;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['name', 'username', 'avatar', 'email', 'password'])]
+#[Fillable(['name', 'username', 'avatar_key', 'email', 'password'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable implements PasskeyUser, JWTSubject
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable, HasApiTokens;
-
+    use HasUuids, HasFactory, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable, HasApiTokens;
+    public $incrementing = false;
+    protected $keyType = 'string';
+    protected $appends = ['avatar'];
     /**
      * Get the attributes that should be cast.
      *
@@ -52,6 +56,18 @@ class User extends Authenticatable implements PasskeyUser, JWTSubject
         ];
     }
 
+    public function getAvatarAttribute(?string $value): ?string
+    {
+        if ($this->avatar_key) {
+            return app(\App\Services\AvatarStorageService::class)->getUrl($this);
+        }
+        return $value;
+    }
+
+    public function newUniqueId(): string
+    {
+        return (string) \Illuminate\Support\Str::uuid7();
+    }
     public function emailOtp()
     {
         return $this->hasOne(Email_otp::class);

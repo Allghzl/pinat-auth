@@ -49,6 +49,7 @@ class AuthController extends Controller
 
         /** @var User $user */
         $user = auth('api')->user();
+        auth('web')->login($user);
 
         return response()->json([
             'user'          => $user,
@@ -71,6 +72,7 @@ class AuthController extends Controller
 
         $record->update(['revoked_at' => now()]);
         $user = $record->user;
+        auth('web')->login($user);
 
         return response()->json([
             'access_token'  => JWTAuth::fromUser($user),
@@ -82,7 +84,17 @@ class AuthController extends Controller
 
     public function me(): JsonResponse
     {
-        return response()->json(auth('api')->user());
+        $user = auth('api')->user();
+        auth('web')->login($user);
+
+        return response()->json($user);
+    }
+
+    public function establishSession(): JsonResponse
+    {
+        auth('web')->login(auth('api')->user());
+
+        return response()->json(['ok' => true]);
     }
 
     public function logout(Request $request): JsonResponse
@@ -104,7 +116,7 @@ class AuthController extends Controller
         $user->refreshTokens()->create([
             'token'      => hash('sha256', $raw),
             'device'     => $request->userAgent(),
-            'expires_at' => now()->addMinutes(config('jwt.refresh_ttl')),
+            'expires_at' => now()->addMinutes((int) config('jwt.refresh_ttl')),
         ]);
 
         return $raw;

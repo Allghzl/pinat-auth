@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('oauth_providers', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignUuid('user_id')->constrained()->cascadeOnDelete();
             $table->string('provider');           // google, github, etc.
             $table->string('provider_id');        // ID dari provider
             $table->text('access_token')->nullable();

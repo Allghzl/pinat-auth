@@ -10,10 +10,17 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
 use Tymon\JWTAuth\Facades\JWTAuth;
+use App\Services\AvatarStorageService;
 
 class OAuthController extends Controller
 {
     private const SUPPORTED = ['google', 'github'];
+    private AvatarStorageService $avatarStorageService;
+
+    public function __construct(AvatarStorageService $avatarStorageService)
+    {
+        $this->avatarStorageService = $avatarStorageService;
+    }
 
     public function redirect(string $provider): RedirectResponse|JsonResponse
     {
@@ -24,7 +31,7 @@ class OAuthController extends Controller
         return Socialite::driver($provider)->stateless()->redirect();
     }
 
-    public function callback(string $provider, Request $request): JsonResponse
+    public function callback(string $provider, Request $request): JsonResponse|RedirectResponse
     {
         if (! in_array($provider, self::SUPPORTED)) {
             return response()->json(['message' => 'Unsupported provider'], 422);
@@ -52,10 +59,20 @@ class OAuthController extends Controller
                 ['email' => $social->getEmail()],
                 [
                     'name'              => $social->getName() ?? $social->getNickname() ?? 'User',
-                    'avatar'            => $social->getAvatar(),
                     'email_verified_at' => now(),
                 ]
             );
+
+            if (!$user->avatar_key && $social->getAvatar()) {
+                $objectKey = $this->avatarStorageService
+                    ->importFromUrl(
+                        $social->getAvatar(),
+                        $user
+                    );
+                $user->update([
+                    'avatar_key' => $objectKey
+                ]);
+            }
 
             $user->oauthProviders()->create([
                 'provider'         => $provider,
@@ -70,7 +87,7 @@ class OAuthController extends Controller
         $user->refreshTokens()->create([
             'token'      => hash('sha256', $raw),
             'device'     => $request->userAgent(),
-            'expires_at' => now()->addMinutes(config('jwt.refresh_ttl')),
+            'expires_at' => now()->addMinutes((int) config('jwt.refresh_ttl')),
         ]);
 
         $accessToken = JWTAuth::fromUser($user);

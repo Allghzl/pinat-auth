@@ -32,8 +32,8 @@ export default function OAuthCallback() {
                     refresh_token: refresh,
                     expires_at: Date.now() + expiresIn * 1000,
                 });
-                const redirectTo = params.get('redirect') ?? '/dashboard';
-                window.location.href = redirectTo;
+                window.location.href =
+                    '/auth/session?token=' + encodeURIComponent(token);
             })
             .catch(() => {
                 window.location.href = '/login?error=oauth_failed';
@@ -41,10 +41,10 @@ export default function OAuthCallback() {
     }, []);
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <div className="flex min-h-screen items-center justify-center">
             <div className="text-center">
                 <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-gray-900" />
-                <p className="text-sm text-gray-600">Finishing sign in...</p>
+                <p className="text-sm text-gray-400">Finishing sign in...</p>
             </div>
         </div>
     );

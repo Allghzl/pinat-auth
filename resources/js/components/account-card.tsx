@@ -19,15 +19,20 @@ export function AccountCard({ account, onSelect, onRemove }: Props) {
     return (
         <button
             onClick={onSelect}
-            className="group relative flex w-full items-center gap-3 rounded-lg border bg-white p-4 text-left transition hover:border-blue-500 hover:shadow-md"
+            className="group relative flex w-full cursor-pointer items-center gap-3 rounded-lg border-2 border-gray-800 p-4 text-left transition hover:border-blue-500 hover:shadow-md"
         >
             <Avatar className="h-12 w-12">
-                <AvatarImage src={account.user.avatar} alt={account.user.name} />
+                <AvatarImage
+                    src={account.user.avatar}
+                    alt={account.user.name}
+                />
                 <AvatarFallback>{initials}</AvatarFallback>
             </Avatar>
             <div className="flex-1">
                 <div className="font-medium">{account.user.name}</div>
-                <div className="text-sm text-gray-500">{account.user.email}</div>
+                <div className="text-sm text-gray-500">
+                    {account.user.email}
+                </div>
             </div>
             <Button
                 variant="ghost"
@@ -36,7 +41,7 @@ export function AccountCard({ account, onSelect, onRemove }: Props) {
                     e.stopPropagation();
                     onRemove();
                 }}
-                className="opacity-0 group-hover:opacity-100"
+                className="cursor-pointer opacity-0 group-hover:opacity-100"
             >
                 ✕
             </Button>
