@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\OAuthController;
+use App\Http\Controllers\Api\ServiceAuthController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 
@@ -20,4 +21,9 @@ Route::prefix('auth')->group(function () {
 Route::middleware('auth:api')->prefix('auth')->group(function () {
     Route::get('/me',      [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
+});
+
+// Service routes
+Route::prefix('service')->group(function () {
+    Route::post('token', [ServiceAuthController::class, 'login']);
 });

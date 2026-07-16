@@ -20,6 +20,8 @@ export default function Login() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
+    const redirectTo = new URLSearchParams(window.location.search).get('redirect_to');
+
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         if (params.get('error') === 'oauth_failed') {
@@ -27,15 +29,27 @@ export default function Login() {
         }
     }, []);
 
+    function redirectAfterLogin(res: { access_token: string; refresh_token: string; expires_in: number }) {
+        if (redirectTo) {
+            window.location.href =
+                redirectTo + '#' + new URLSearchParams({
+                    token: res.access_token,
+                    refresh: res.refresh_token,
+                    expires_in: String(res.expires_in),
+                });
+        } else {
+            window.location.href =
+                '/auth/session?token=' + encodeURIComponent(res.access_token);
+        }
+    }
+
     async function handleAccountSelect(idx: number) {
         const account = accounts[idx];
         try {
             await axios.get('/api/auth/me', {
                 headers: { Authorization: `Bearer ${account.access_token}` },
             });
-            window.location.href =
-                '/auth/session?token=' +
-                encodeURIComponent(account.access_token);
+            redirectAfterLogin(account as any);
         } catch {
             // token expired → refresh
             try {
@@ -51,9 +65,7 @@ export default function Login() {
                     refresh_token: res.data.refresh_token,
                     expires_at: Date.now() + res.data.expires_in * 1000,
                 });
-                window.location.href =
-                    '/auth/session?token=' +
-                    encodeURIComponent(res.data.access_token);
+                redirectAfterLogin(res.data);
             } catch {
                 removeAccount(account.user.id);
                 setError('Session expired. Please log in again.');
@@ -75,9 +87,7 @@ export default function Login() {
                 refresh_token: res.data.refresh_token,
                 expires_at: Date.now() + res.data.expires_in * 1000,
             });
-            window.location.href =
-                '/auth/session?token=' +
-                encodeURIComponent(res.data.access_token);
+            redirectAfterLogin(res.data);
         } catch (err: any) {
             setError(err.response?.data?.message || 'Login failed');
         } finally {
@@ -86,7 +96,10 @@ export default function Login() {
     }
 
     function handleOAuth(provider: 'google' | 'github') {
-        window.location.href = `/api/auth/oauth/${provider}`;
+        const params = new URLSearchParams();
+        if (redirectTo) params.set('redirect_to', redirectTo);
+        const qs = params.toString();
+        window.location.href = `/api/auth/oauth/${provider}${qs ? '?' + qs : ''}`;
     }
 
     if (!showForm && accounts.length > 0) {

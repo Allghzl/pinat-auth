@@ -1,16 +1,16 @@
 import { useEffect } from 'react';
-import { useSearchParams } from '@inertiajs/react';
 import axios from 'axios';
 import { saveAccount } from '@/lib/auth-storage';
 import type { AuthResponse } from '@/types/auth';
 
 /**
- * Landing page setelah OAuth redirect dari backend.
- * Backend redirect ke /auth/callback?token=...&refresh=...
+ * Landing page setelah OAuth redirect dari backend (default flow, tanpa redirect_to).
+ * Backend redirect ke /auth/callback#token=...&refresh=...
+ * Kalo ada redirect_to, backend langsung redirect ke service lain — halaman ini gak dipanggil.
  */
 export default function OAuthCallback() {
     useEffect(() => {
-        const params = new URLSearchParams(window.location.search);
+        const params = new URLSearchParams(window.location.hash.slice(1));
         const token = params.get('token');
         const refresh = params.get('refresh');
         const expiresIn = parseInt(params.get('expires_in') ?? '3600', 10);

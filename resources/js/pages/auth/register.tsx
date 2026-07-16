@@ -18,6 +18,8 @@ export default function Register() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
+    const redirectTo = new URLSearchParams(window.location.search).get('redirect_to');
+
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
         setLoading(true);
@@ -34,9 +36,18 @@ export default function Register() {
                 refresh_token: res.data.refresh_token,
                 expires_at: Date.now() + res.data.expires_in * 1000,
             });
-            window.location.href =
-                '/auth/session?token=' +
-                encodeURIComponent(res.data.access_token);
+            if (redirectTo) {
+                window.location.href =
+                    redirectTo + '#' + new URLSearchParams({
+                        token: res.data.access_token,
+                        refresh: res.data.refresh_token,
+                        expires_in: String(res.data.expires_in),
+                    });
+            } else {
+                window.location.href =
+                    '/auth/session?token=' +
+                    encodeURIComponent(res.data.access_token);
+            }
         } catch (err: any) {
             const errors = err.response?.data?.errors;
             if (errors) {

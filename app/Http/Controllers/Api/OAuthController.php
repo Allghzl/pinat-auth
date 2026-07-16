@@ -22,19 +22,31 @@ class OAuthController extends Controller
         $this->avatarStorageService = $avatarStorageService;
     }
 
-    public function redirect(string $provider): RedirectResponse|JsonResponse
+    public function redirect(string $provider, Request $request): RedirectResponse|JsonResponse
     {
         if (! in_array($provider, self::SUPPORTED)) {
             return response()->json(['message' => 'Unsupported provider'], 422);
         }
 
-        return Socialite::driver($provider)->stateless()->redirect();
+        $redirectTo = $request->input('redirect_to');
+
+        return Socialite::driver($provider)
+            ->stateless()
+            ->with(['state' => base64_encode(json_encode(['redirect_to' => $redirectTo]))])
+            ->redirect();
     }
 
     public function callback(string $provider, Request $request): JsonResponse|RedirectResponse
     {
         if (! in_array($provider, self::SUPPORTED)) {
             return response()->json(['message' => 'Unsupported provider'], 422);
+        }
+
+        // Decode redirect_to from state
+        $redirectTo = null;
+        if ($request->has('state')) {
+            $state = json_decode(base64_decode($request->input('state')), true);
+            $redirectTo = $state['redirect_to'] ?? null;
         }
 
         try {
@@ -93,10 +105,13 @@ class OAuthController extends Controller
         $accessToken = JWTAuth::fromUser($user);
         $ttl         = config('jwt.ttl') * 60;
 
-        // Redirect to frontend callback page with tokens in query string.
-        // ponytail: move to fragment (#) or postMessage if XSS is a concern.
+        // Use redirect_to param or fall back to default PinatAuth callback.
+        // Fragment (#) instead of query to keep tokens out of server logs.
+        $defaultRedirect = url('/auth/callback');
+        $finalRedirect = $redirectTo ?: $defaultRedirect;
+
         return redirect()->away(
-            url('/auth/callback') . '?' . http_build_query([
+            $finalRedirect . '#' . http_build_query([
                 'token'      => $accessToken,
                 'refresh'    => $raw,
                 'expires_in' => $ttl,
