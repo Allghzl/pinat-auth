@@ -1,6 +1,10 @@
 <?php
 
+use App\Http\Controllers\JwksController;
 use Illuminate\Support\Facades\Route;
+
+// JWKS endpoint for JWT verification (public, no auth required)
+Route::get('/.well-known/jwks.json', JwksController::class);
 
 Route::inertia('/', 'welcome')->name('home');
 
@@ -33,4 +37,4 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::inertia('dashboard', 'dashboard')->name('dashboard');
 });
 
-require __DIR__.'/settings.php';
+require __DIR__ . '/settings.php';

@@ -81,7 +81,9 @@ class User extends Authenticatable implements PasskeyUser, JWTSubject
 
     public function getJWTCustomClaims()
     {
-        return [];
+        return [
+            'type' => 'user'
+        ];
     }
 
     // OAuth relations

@@ -9,7 +9,7 @@ return [
     ],
     'ttl' => env('JWT_TTL', 60), // minutes
     'refresh_ttl' => env('JWT_REFRESH_TTL', 20160), // 2 weeks
-    'algo' => env('JWT_ALGO', 'HS256'),
+    'algo' => env('JWT_ALGO', 'RS256'),
     'required_claims' => [
         'iss',
         'iat',

@@ -5,11 +5,14 @@ namespace App\Services;
 use App\Models\Service;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
-use Tymon\JWTAuth\Facades\JWTAuth;
 use Illuminate\Validation\ValidationException;
 
 class ServiceAuthService
 {
+    public function __construct(
+        protected JwtService $jwt,
+
+    ) {}
     /**
      * Login service.
      */
@@ -48,12 +51,19 @@ class ServiceAuthService
             'last_used_at' => now(),
         ]);
 
-        $token = JWTAuth::fromUser($service);
+        $token = $this->jwt->generate([
+            'sub'       => $service->id,
+            'type'      => 'service',
+            'service'   => $service->slug,
+            'bucket'    => $service->default_bucket,
+            'scopes'    => $service->allowed_scopes,
+            'cid'       => $service->client_id,
+        ]);
 
         return [
             'access_token' => $token,
             'token_type'   => 'Bearer',
-            'expires_in'   => config('jwt.ttl') * 60,
+            'expires_in'   => $this->jwt->ttl(),
             'service'      => $service,
         ];
     }
