@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  pinat-auth:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pinat-auth
+    ports:
+      - "5000:8000"  # External port 5000 -> Internal port 8000
+    environment:
+      - APP_NAME=PinatAuth
+      - APP_ENV=${APP_ENV:-production}
+      - APP_KEY=${APP_KEY}
+      - APP_DEBUG=${APP_DEBUG:-false}
+      - APP_URL=${APP_URL:-http://localhost:5000}
+
+      # Database PostgreSQL
+      - DB_CONNECTION=pgsql
+      - DB_HOST=${DB_HOST:-host.docker.internal}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_DATABASE=${DB_DATABASE:-pinat_auth}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+
+      # Session
+      - SESSION_DRIVER=${SESSION_DRIVER:-database}
+      - SESSION_LIFETIME=${SESSION_LIFETIME:-120}
+
+      # JWT Configuration
+      - JWT_PRIVATE_KEY_PATH=/var/www/html/storage/jwt/private.key
+      - JWT_PUBLIC_KEY_PATH=/var/www/html/storage/jwt/public.key
+      - JWT_TTL=${JWT_TTL:-3600}
+
+      # Cache
+      - CACHE_DRIVER=${CACHE_DRIVER:-file}
+      - QUEUE_CONNECTION=${QUEUE_CONNECTION:-sync}
+
+    volumes:
+      - ./storage:/var/www/html/storage
+      - ./bootstrap/cache:/var/www/html/bootstrap/cache
+
+    networks:
+      - pinat-auth-network
+
+    restart: unless-stopped
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  pinat-auth-network:
+    driver: bridge
