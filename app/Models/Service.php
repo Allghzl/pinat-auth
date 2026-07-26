@@ -8,7 +8,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Laravel\Sanctum\HasApiTokens;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 
-class Service extends Authenticatable implements JWTSubject
+class Service extends Authenticatable
 {
     use HasUuids;
 
@@ -33,19 +33,4 @@ class Service extends Authenticatable implements JWTSubject
     protected $hidden = [
         'client_secret_hash',
     ];
-
-    public function getJWTIdentifier()
-    {
-        return $this->getKey();
-    }
-
-    public function getJWTCustomClaims()
-    {
-        return [
-            'type' => 'service',
-            'service' => $this->name,
-            'bucket' => $this->def_bucket ?? null,
-            'scopes' => $this->allowed_scopes,
-        ];
-    }
 }

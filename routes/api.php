@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\OAuthController;
 use App\Http\Controllers\Api\ServiceAuthController;
+use App\Http\Controllers\JwksController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 
@@ -27,3 +28,4 @@ Route::middleware('auth:api')->prefix('auth')->group(function () {
 Route::prefix('service')->group(function () {
     Route::post('token', [ServiceAuthController::class, 'login']);
 });
+

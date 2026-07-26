@@ -13,6 +13,7 @@
 /vendor
 .DS_Store
 .env
+.env.testing
 .env.backup
 .env.production
 .phpactor.json
@@ -28,3 +29,4 @@ yarn-error.log
 /.vscode
 /.zed
 /SETUP-CLIENT.md
+/storage/keys/
