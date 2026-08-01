@@ -27,13 +27,23 @@ return new class extends Migration
             $table->timestamp('created_at')->nullable();
         });
 
-        Schema::create('sessions', function (Blueprint $table) {
-            $table->string('id')->primary();
-            $table->foreignUuid('user_id')->nullable()->index();
+        Schema::create('auth_sessions', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->foreignUuid('user_id')
+                ->constrained()
+                ->cascadeOnDelete();
+            $table->string('client_id');
+            $table->string('device_name')->nullable();
+            $table->string('platform')->nullable();
+            $table->string('browser')->nullable();
             $table->string('ip_address', 45)->nullable();
             $table->text('user_agent')->nullable();
-            $table->longText('payload');
-            $table->integer('last_activity')->index();
+            $table->timestamp('last_activity_at')
+                ->useCurrent();
+            $table->timestamp('expires_at')->nullable();
+            $table->timestamp('revoked_at')->nullable();
+            $table->string('revoked_reason')->nullable();
+            $table->timestamps();
         });
     }
 
@@ -44,6 +54,6 @@ return new class extends Migration
     {
         Schema::dropIfExists('users');
         Schema::dropIfExists('password_reset_tokens');
-        Schema::dropIfExists('sessions');
+        Schema::dropIfExists('auth_sessions');
     }
 };

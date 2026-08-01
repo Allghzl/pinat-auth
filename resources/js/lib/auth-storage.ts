@@ -9,7 +9,10 @@ export function getSavedAccounts(): SavedAccount[] {
 
 export function saveAccount(account: SavedAccount) {
     const accounts = getSavedAccounts();
-    const idx = accounts.findIndex((a) => a.user.id === account.user.id);
+
+    const idx = accounts.findIndex(
+        (a) => a.user.id === account.user.id
+    );
 
     if (idx >= 0) {
         accounts[idx] = account;
@@ -18,9 +21,10 @@ export function saveAccount(account: SavedAccount) {
     }
 
     localStorage.setItem(KEY, JSON.stringify(accounts));
+
 }
 
-export function removeAccount(userId: number) {
+export function removeAccount(userId: string) {
     const accounts = getSavedAccounts().filter((a) => a.user.id !== userId);
     localStorage.setItem(KEY, JSON.stringify(accounts));
 }

@@ -20,14 +20,14 @@ class JwtService
     public function generate(array $claims): string
     {
         $privateKey = $this->keys->getPrivateKey();
-
+        $ttl = $this->ttl();
         $now = time();
 
         $payload = array_merge([
-            'iss' => config('app.url'),
+            'iss' => config('pinat-auth.jwt.issuer'),
             'iat' => $now,
             'nbf' => $now,
-            'exp' => $now + (60 * 60),
+            'exp' => $now + $ttl,
         ], $claims);
 
         return JWT::encode(
@@ -67,6 +67,11 @@ class JwtService
 
     public function ttl(): int
     {
-        return config('jwt.ttl') * 60; // Convert minutes to seconds
+        return config('pinat-auth.jwt.ttl') * 60;
+    }
+
+    public function refreshTtl(): int
+    {
+        return (int) config('pinat-auth.jwt.refresh_ttl') * 60;
     }
 }

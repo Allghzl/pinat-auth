@@ -63,32 +63,17 @@ class AvatarStorageService
     }
 
     /**
-     * Ambil object key avatar.
-     */
-    public function getObjectKey(User $user): ?string
-    {
-        $directory = self::BUCKET_FOLDER . '/' . $user->id;
-
-        $files = Storage::disk('s3')->allFiles($directory);
-
-        return $files[0] ?? null;
-    }
-
-    /**
      * Ambil URL avatar.
      */
     public function getUrl(User $user): ?string
     {
-        $objectKey = $this->getObjectKey($user);
-
-        if (! $objectKey) {
+        if (!$user->avatar_key) {
             return null;
         }
 
-        // private bucket — presigned URL, 60 min expiry
         return Storage::disk('s3')->temporaryUrl(
-            $objectKey,
-            now()->addMinutes(60)
+            $user->avatar_key,
+            now()->addMinutes(60),
         );
     }
 

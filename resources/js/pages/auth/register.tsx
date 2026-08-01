@@ -18,7 +18,9 @@ export default function Register() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
-    const redirectTo = new URLSearchParams(window.location.search).get('redirect_to');
+    const redirectTo = new URLSearchParams(window.location.search).get(
+        'redirect_to',
+    );
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
@@ -38,9 +40,11 @@ export default function Register() {
             });
             if (redirectTo) {
                 window.location.href =
-                    redirectTo + '#' + new URLSearchParams({
-                        token: res.data.access_token,
-                        refresh: res.data.refresh_token,
+                    redirectTo +
+                    '#' +
+                    new URLSearchParams({
+                        access_token: res.data.access_token,
+                        refresh_token: res.data.refresh_token,
                         expires_in: String(res.data.expires_in),
                     });
             } else {
@@ -61,7 +65,15 @@ export default function Register() {
     }
 
     function handleOAuth(provider: 'google' | 'github') {
-        window.location.href = `/api/auth/oauth/${provider}`;
+        const params = new URLSearchParams();
+
+        if (redirectTo) {
+            params.set('redirect_to', redirectTo);
+        }
+
+        const qs = params.toString();
+
+        window.location.href = `/api/auth/oauth/${provider}${qs ? '?' + qs : ''}`;
     }
 
     return (

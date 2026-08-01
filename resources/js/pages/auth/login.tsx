@@ -20,7 +20,11 @@ export default function Login() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
-    const redirectTo = new URLSearchParams(window.location.search).get('redirect_to');
+    const params = new URLSearchParams(window.location.search);
+
+    const clientId = params.get('client_id');
+    const redirectUri = params.get('redirect_uri');
+    const state = params.get('state');
 
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
@@ -29,13 +33,22 @@ export default function Login() {
         }
     }, []);
 
-    function redirectAfterLogin(res: { access_token: string; refresh_token: string; expires_in: number }) {
-        if (redirectTo) {
+    function redirectAfterLogin(res: {
+        access_token: string;
+        refresh_token: string;
+        session_id: string;
+        expires_in: number;
+    }) {
+        if (clientId && redirectUri) {
             window.location.href =
-                redirectTo + '#' + new URLSearchParams({
-                    token: res.access_token,
-                    refresh: res.refresh_token,
+                redirectUri +
+                '#' +
+                new URLSearchParams({
+                    access_token: res.access_token,
+                    refresh_token: res.refresh_token,
+                    session_id: res.session_id,
                     expires_in: String(res.expires_in),
+                    state: state ?? '',
                 });
         } else {
             window.location.href =
@@ -65,7 +78,12 @@ export default function Login() {
                     refresh_token: res.data.refresh_token,
                     expires_at: Date.now() + res.data.expires_in * 1000,
                 });
-                redirectAfterLogin(res.data);
+                redirectAfterLogin({
+                    access_token: res.data.access_token,
+                    refresh_token: res.data.refresh_token,
+                    session_id: (res.data as any).session_id || '',
+                    expires_in: res.data.expires_in,
+                });
             } catch {
                 removeAccount(account.user.id);
                 setError('Session expired. Please log in again.');
@@ -87,7 +105,12 @@ export default function Login() {
                 refresh_token: res.data.refresh_token,
                 expires_at: Date.now() + res.data.expires_in * 1000,
             });
-            redirectAfterLogin(res.data);
+            redirectAfterLogin({
+                access_token: res.data.access_token,
+                refresh_token: res.data.refresh_token,
+                session_id: (res.data as any).session_id || '',
+                expires_in: res.data.expires_in,
+            });
         } catch (err: any) {
             setError(err.response?.data?.message || 'Login failed');
         } finally {
@@ -97,9 +120,20 @@ export default function Login() {
 
     function handleOAuth(provider: 'google' | 'github') {
         const params = new URLSearchParams();
-        if (redirectTo) params.set('redirect_to', redirectTo);
-        const qs = params.toString();
-        window.location.href = `/api/auth/oauth/${provider}${qs ? '?' + qs : ''}`;
+
+        if (clientId) {
+            params.set('client_id', clientId);
+        }
+
+        if (redirectUri) {
+            params.set('redirect_uri', redirectUri);
+        }
+
+        if (state) {
+            params.set('state', state);
+        }
+
+        window.location.href = `/api/auth/oauth/${provider}?${params.toString()}`;
     }
 
     if (!showForm && accounts.length > 0) {

@@ -13,19 +13,19 @@ Route::prefix('auth')->group(function () {
     Route::post('/login',    [AuthController::class, 'login']);
     Route::post('/refresh',  [AuthController::class, 'refresh']);
 
-    // OAuth
-    Route::get('/oauth/{provider}',          [OAuthController::class, 'redirect']);
-    Route::get('/oauth/{provider}/callback', [OAuthController::class, 'callback']);
+    // // OAuth
+    // Route::get('/oauth/{provider}',          [OAuthController::class, 'redirect']);
+    // Route::get('/oauth/{provider}/callback', [OAuthController::class, 'callback']);
 });
 
 // Protected routes
-Route::middleware('auth:api')->prefix('auth')->group(function () {
-    Route::get('/me',      [AuthController::class, 'me']);
+Route::middleware('jwt')->prefix('auth')->group(function () {
+    Route::get('/me', [AuthController::class, 'me']);
+    Route::get('/avatar', [AuthController::class, 'avatar']);
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::post('/logout-all', [AuthController::class, 'logoutAll']);
 });
-
 // Service routes
 Route::prefix('service')->group(function () {
     Route::post('token', [ServiceAuthController::class, 'login']);
 });
-

@@ -8,9 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class RefreshToken extends Model
 {
     protected $fillable = [
-        'user_id',
+        'session_id',
         'token',
-        'device',
         'expires_at',
         'revoked_at',
     ];
@@ -20,13 +19,30 @@ class RefreshToken extends Model
         'revoked_at' => 'datetime',
     ];
 
-    public function user(): BelongsTo
+    public function session(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(AuthSession::class);
+    }
+    public function revoke(): void
+    {
+        $this->update([
+            'revoked_at' => now(),
+        ]);
+    }
+
+    public function isRevoked(): bool
+    {
+        return $this->revoked_at !== null;
+    }
+
+    public function isExpired(): bool
+    {
+        return $this->expires_at->isPast();
     }
 
     public function isValid(): bool
     {
-        return is_null($this->revoked_at) && $this->expires_at->isFuture();
+        return ! $this->isRevoked()
+            && ! $this->isExpired();
     }
 }
