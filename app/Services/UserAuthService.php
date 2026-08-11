@@ -224,6 +224,7 @@ class UserAuthService
             'email' => $user->email,
             'name' => $user->name,
             'avatar_key' => $user->avatar_key,
+            'avatar_url' => $user->avatar_url,
 
         ]);
     }
