@@ -1,41 +1,77 @@
-# Dockerfile for PinatAuth
-FROM php:8.4-fpm-alpine
+# =========================
+# Frontend build
+# =========================
+FROM node:24-alpine AS frontend-build
 
-# Install system dependencies
-RUN apk add --no-cache \
-    git \
-    curl \
-    libpng-dev \
-    libzip-dev \
-    zip \
-    unzip \
-    postgresql-dev \
-    nodejs \
-    npm
+WORKDIR /app
 
-# Install PHP extensions
-RUN docker-php-ext-install pdo pdo_pgsql pgsql zip gd
+COPY package.json package-lock.json ./
+RUN npm ci
 
-# Install Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-
-# Set working directory
-WORKDIR /var/www/html
-
-# Copy application files
 COPY . .
 
-# Install PHP dependencies
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+RUN npm run build
 
-# Set permissions
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Generate application key (if not exists)
-RUN php artisan config:cache || true
+# =========================
+# PHP dependencies
+# =========================
+FROM composer:2 AS composer-build
 
-# Expose port
+WORKDIR /app
+
+COPY composer.json composer.lock ./
+
+RUN composer install \
+    --no-dev \
+    --no-interaction \
+    --no-progress \
+    --prefer-dist \
+    --optimize-autoloader \
+    --no-scripts
+
+
+# =========================
+# Production
+# =========================
+FROM php:8.4-cli-alpine
+
+RUN apk add --no-cache \
+    curl \
+    libpng \
+    libzip \
+    postgresql-libs \
+    && apk add --no-cache --virtual .build-deps \
+    $PHPIZE_DEPS \
+    libpng-dev \
+    libzip-dev \
+    postgresql-dev \
+    && docker-php-ext-install \
+    pdo \
+    pdo_pgsql \
+    pgsql \
+    zip \
+    gd \
+    bcmath \
+    opcache \
+    && apk del .build-deps
+
+WORKDIR /var/www/html
+
+COPY . .
+
+COPY --from=composer-build /app/vendor ./vendor
+COPY --from=frontend-build /app/public/build ./public/build
+
+RUN mkdir -p \
+    storage/framework/cache \
+    storage/framework/sessions \
+    storage/framework/views \
+    storage/logs \
+    storage/jwt \
+    bootstrap/cache \
+    && chown -R www-data:www-data storage bootstrap/cache
+
 EXPOSE 8000
 
-# Start Laravel server
 CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
