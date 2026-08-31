@@ -27,7 +27,6 @@ Homestead.yaml
 auth.json
 
 # Storage (akan di-mount sebagai volume)
-storage/*.key
 storage/logs/*
 storage/framework/cache/*
 storage/framework/sessions/*
