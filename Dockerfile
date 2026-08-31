@@ -98,6 +98,8 @@ RUN apk add --no-cache \
     gd \
     bcmath \
     opcache \
+    && pecl install redis \
+    && docker-php-ext-enable redis \
     && apk del .build-deps
 
 WORKDIR /var/www/html
