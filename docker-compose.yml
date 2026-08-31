@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        VITE_APP_NAME: ${VITE_APP_NAME}
+        VITE_APP_NAME: ${VITE_APP_NAME:-PinatAuth}
 
     pull_policy: build
 
