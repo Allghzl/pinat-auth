@@ -5,12 +5,10 @@ export default function AppLogoIcon(props: SVGAttributes<SVGElement>) {
         <svg
             xmlns="http://www.w3.org/2000/svg"
             xmlnsXlink="http://www.w3.org/1999/xlink"
-            width="1024"
-            zoomAndPan="magnify"
             viewBox="0 0 768 767.999994"
-            height="1024"
             preserveAspectRatio="xMidYMid meet"
             version="1.0"
+            {...props}
         >
             <defs>
                 <filter

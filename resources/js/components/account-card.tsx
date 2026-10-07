@@ -19,31 +19,31 @@ export function AccountCard({ account, onSelect, onRemove }: Props) {
     return (
         <button
             onClick={onSelect}
-            className="group relative flex w-full cursor-pointer items-center gap-3 rounded-lg border-2 border-gray-800 p-4 text-left transition hover:border-blue-500 hover:shadow-md"
+            className="group relative flex w-full cursor-pointer items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 text-left transition-all duration-150 hover:border-foreground/20 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-            <Avatar className="h-12 w-12">
-                <AvatarImage
-                    src={account.user.avatar}
-                    alt={account.user.name}
-                />
-                <AvatarFallback>{initials}</AvatarFallback>
+            <Avatar className="h-10 w-10 shrink-0">
+                <AvatarImage src={account.user.avatar} alt={account.user.name} />
+                <AvatarFallback className="text-xs font-medium">{initials}</AvatarFallback>
             </Avatar>
-            <div className="flex-1">
-                <div className="font-medium">{account.user.name}</div>
-                <div className="text-sm text-gray-500">
-                    {account.user.email}
-                </div>
+
+            <div className="min-w-0 flex-1">
+                <div className="truncate text-sm font-medium">{account.user.name}</div>
+                <div className="truncate text-xs text-muted-foreground">{account.user.email}</div>
             </div>
+
             <Button
                 variant="ghost"
-                size="sm"
+                size="icon"
                 onClick={(e) => {
                     e.stopPropagation();
                     onRemove();
                 }}
-                className="cursor-pointer opacity-0 group-hover:opacity-100"
+                aria-label={`Remove ${account.user.name}`}
+                className="h-7 w-7 shrink-0 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
             >
-                ✕
+                <svg className="h-3.5 w-3.5" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                    <path d="M1 1l12 12M13 1L1 13" />
+                </svg>
             </Button>
         </button>
     );
